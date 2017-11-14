@@ -1,0 +1,24 @@
+{
+  "name": "crowdsale-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd node_modules/oracles-combine-solidity && npm install"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.1",
+    "cors": "^2.8.4",
+    "express": "^4.15.4",
+    "oracles-combine-solidity": "git://github.com/oraclesorg/oracles-combine-solidity",
+    "parse": "^1.10.0",
+    "prompt": "^1.0.0",
+    "shelljs": "^0.7.8",
+    "solc": "^0.4.18",
+    "web3": "^0.20.2",
+    "zeppelin-solidity": "git://github.com/OpenZeppelin/zeppelin-solidity.git#master"
+  }
+}

@@ -1,0 +1,10 @@
+
+pragma solidity ^0.4.15;
+
+import "zeppelin-solidity/contracts/token/MintableToken.sol";
+
+contract Token is MintableToken {
+    string public constant name = "token_name_placeholder";
+    string public constant symbol = "token_symbol_placeholder";
+    uint8 public constant decimals = 18;
+}
