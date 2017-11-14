@@ -12,7 +12,9 @@ const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const solc = require('solc');
 
-var fs = require('fs')
+var fs = require('fs');
+const encodeAbi = require('ethereumjs-abi');
+
 
 var appRouter = function (app) {
     /**
@@ -57,7 +59,7 @@ var appRouter = function (app) {
         });
     });
 
-        /**
+    /**
      * Get details info for single token
      */
     app.get("/token", function (req, res) {
@@ -156,6 +158,17 @@ var appRouter = function (app) {
 
         let Token = Parse.Object.extend('Token');  
         let tokenQuery = new Parse.Query(Token);
+        
+
+        var buildDir = './build';
+        console.log(buildDir);
+        if (!fs.existsSync(buildDir)) {
+            fs.mkdirSync(buildDir);
+        }
+        else{
+            var shell = require('shelljs');
+            shell.rm('-r', buildDir);
+        }
 
         tokenQuery.equalTo("objectId", tokenId);
         tokenQuery.first({
@@ -169,12 +182,6 @@ var appRouter = function (app) {
                 let crowdSaleTemplate = "templates/CrowdSale.template";
                 let crowdSaleFile = "CrowdSale.sol";
 
-                var buildDir = './build';
-                console.log(buildDir);
-                if (!fs.existsSync(buildDir)) {
-                    fs.mkdirSync(buildDir);
-                }
-                
                 fs.readFile(tokenTemplate, 'utf8', function (err,data) {
                     if (err) {
                       return console.log(err);
@@ -234,32 +241,37 @@ var appRouter = function (app) {
             // shell.mkdir(buildDir + '/merged');
             console.log(mergedDir);
             if (fs.existsSync(buildDir + '/merged')) {
-                var prompt = require('prompt');
+                shell.rm('-r', mergedDir);
+                shell.mv('./out', mergedDir);
+                shell.mv(mergedDir + '/CrowdSale_flat.sol', buildDir + '/merged/CrowdSale.sol');
+                res.send('Successuly merged!')
 
-                console.log("Do you want to remove " + mergedDir);
-                console.log("if yes, please input 'y' , or 'n' ");
+                // var prompt = require('prompt');
 
-                prompt.get(['input'], function (err, result) {
-                    //
-                    // Log the results.
-                    //
-                    console.log('Command-line input received:');
-                    console.log('input: ' + result.input);
+                // console.log("Do you want to remove " + mergedDir);
+                // console.log("if yes, please input 'y' , or 'n' ");
 
-                    if ( result.input === 'y') {
-                        console.log('remove out folder');
-                        shell.rm('-r', mergedDir)
-                        shell.mv('./out', mergedDir);
-                        shell.mv(mergedDir + '/CrowdSale_flat.sol', buildDir + '/merged/CrowdSale.sol');
-                        res.send('Successuly merged!')
-                    }
-                    else {
-                        res.send('Merged stopped.')
-                    }
-                });
+                // prompt.get(['input'], function (err, result) {
+                //     //
+                //     // Log the results.
+                //     //
+                //     console.log('Command-line input received:');
+                //     console.log('input: ' + result.input);
+
+                //     if ( result.input === 'y') {
+                //         console.log('remove out folder');
+                //         shell.rm('-r', mergedDir)
+                //         shell.mv('./out', mergedDir);
+                //         shell.mv(mergedDir + '/CrowdSale_flat.sol', buildDir + '/merged/CrowdSale.sol');
+                //         res.send('Successuly merged!')
+                //     }
+                //     else {
+                //         res.send('Merged stopped.')
+                //     }
+                // });
+                
             }
             else {
-
                 shell.mv('./out', mergedDir);
                 shell.mv(mergedDir + '/CrowdSale_flat.sol', mergedDir + '/CrowdSale.sol');
                 res.send('Successuly merged!')
@@ -275,7 +287,6 @@ var appRouter = function (app) {
         
         console.log('tokenId', tokenId);
 
-
         // Deploy contract instance
         let CrowdSale = Parse.Object.extend('CrowdSale');  
         let crowdSaleQuery = new Parse.Query(CrowdSale);
@@ -287,7 +298,6 @@ var appRouter = function (app) {
                 console.log(crowdSale.toJSON());
 
                 // compile contract
-
                 let crowdSaleParams = crowdSale.toJSON();
 
                 var buildDir = __dirname + '/../build';
@@ -296,22 +306,13 @@ var appRouter = function (app) {
         
                 const input = fs.readFileSync(mergedFile);
                 const output = solc.compile(input.toString(), 1);
-                // console.log(output);
                 const bytecode = output.contracts[':TokenCrowdsale'].bytecode;
                 const abi = JSON.parse(output.contracts[':TokenCrowdsale'].interface);
                 const tokenAbi = JSON.parse(output.contracts[':Token'].interface);
 
-        
-                // console.log(abi);
-        
                 // Contract object
                 const contract = web3.eth.contract(abi);
                 const tokenContract = web3.eth.contract(tokenAbi);
-
-                
-                console.log(web3.eth.coinbase);
-                console.log(web3.eth.accounts[0]);
-
 
                 const duration = {
                     seconds: function (val) { return val },
@@ -322,79 +323,56 @@ var appRouter = function (app) {
                     years: function (val) { return val * this.days(365) }
                 };
 
-                startTime = web3.eth.getBlock('latest').timestamp + duration.minutes(8);
+                startTime = web3.eth.getBlock('latest').timestamp + duration.minutes(9);
                 endTime = startTime + duration.weeks(1);
 
                 console.log(startTime);
                 console.log(endTime);
             
 
-                const contractInstance = contract.new(
+                    const contractInstance = contract.new(
                     // crowdSaleParams.startTime,
                     // crowdSaleParams.endTime,
-
                     startTime,
                     endTime,
-                    // crowdSaleParams.baseRate,
-                    100,
+                    crowdSaleParams.baseRate,
+                    // 100,
                     // crowdSaleParams.wallet,
                     web3.eth.accounts[0],
                     {
                     data: '0x' + bytecode,
                     from: web3.eth.coinbase,
-                    // from: '0xc8276afa0a38774bbaa0533d6c77106bc4286d10', 
-                    gas: 3000000
-                }, (err, res) => {
+                    gas: 4000000
+                }, (err, crowdRes) => {
                     if (err) {
                         console.log(err);
                         return;
                     }
 
                     // Log the tx, you can explore status with eth.getTransaction()
-                    console.log(res.transactionHash);
+                    console.log(crowdRes.transactionHash);
                     // console.log('res:', res);
 
                     // If we have an address property, the contract was deployed
-                    if (res.address) {
-                        console.log('Contract address: ' + res.address);
+                    if (crowdRes.address) {
+                        console.log('Contract address: ' + crowdRes.address);
                         // Let's test the deployed contract
-
                         // Reference to the deployed contract
-                        var address = res.address
+                        var address = crowdRes.address
                         const crowdsaleInstance = contract.at(address);
-                        crowdsaleInstance.token.call({gas: 3000000},(err, res) =>{
+                        crowdsaleInstance.token.call({gas: 3000000},(err, tokenRes) =>{
                             if (err) {
                                 console.log(err);
                                 return;
                             }
                             console.log('Token deployed');
-                            console.log(res);   
+                            console.log(tokenRes);   
 
-                                       // // Destination account for test
-                            const test_account = web3.eth.accounts[0];
-                            console.log(test_account);
-                        
-                            // Call the transfer function
-                            let transaction = {};
-                            transaction.from = test_account;
-                            transaction.to =  address;
-                            transaction.value =web3.toWei(1, "ether");
-                            
-                            // transaction.gas = gas;
-                            // transaction.gasPrice = gasPrice; 
-                            console.log('transaction', transaction);
-                            // web3.eth.sendTransaction(transaction, (err, res) => {
-                            //     if (err) {
-                            //         console.log(err);
-                            //         return;
-                            //     }
-                            //     console.log(res);
-                            // });
-                            // web3.eth.sendTransaction(transaction);
-
+                            var tokenAddress = {};
+                            tokenAddress.CrowdSaleContractAddress = crowdRes.address; 
+                            tokenAddress.TokenContractAddress = tokenRes;
+                            res.send(tokenAddress);
                         });
-                        
-             
                     }
                 });
             },
@@ -405,12 +383,5 @@ var appRouter = function (app) {
             }
         });
     });
-
-
-    // app.post("/deploy", function(req, res) {
-
-    // });
-
-   
 }
 module.exports = appRouter;
