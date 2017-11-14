@@ -275,7 +275,7 @@ var appRouter = function (app) {
             else {
 
                 shell.mv('./out', mergedDir);
-                shell.mv(mergediDir + '/CrowdSale_flat.sol', mergedDir + '/CrowdSale.sol');
+                shell.mv(mergedDir + '/CrowdSale_flat.sol', mergedDir + '/CrowdSale.sol');
                 res.send('Successuly merged!')
             }
         }
