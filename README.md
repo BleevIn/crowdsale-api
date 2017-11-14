@@ -17,3 +17,14 @@ npm run postinstall
 ```
 node app.js
 ```
+
+4. create token via create token api
+
+```
+URL: localhost:3000/token
+Method: POST
+Body:
+{
+  "name" : "FacetCoin",
+  "symbol": "FCT"
+}
