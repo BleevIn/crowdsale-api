@@ -2,6 +2,8 @@ var Parse = require('parse/node');
 Parse.initialize('ICO-API-DEV');
 Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
 
+var parse = require('../utils/parse');
+
 Web3 = require('web3');
 // var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
 
@@ -23,31 +25,15 @@ var appRouter = function (app) {
     /**
     * Create a token
     */
-    app.post("/token", function (req, res) {
+    app.post("/token", async function (req, res) {
         console.log(req);
         console.log(req.body);
         // console.log(req.key);
         let name = req.body.name;
         let symbol = req.body.symbol;
-        // let key = req.body.key;
 
-        let Token = Parse.Object.extend('Token');
-        let newToken = new Token();
-
-        newToken.set('name', name);
-        newToken.set('symbol', symbol);
-        newToken.set('decimals', 18);
-        
-        newToken.save(null, {
-            success: function (newToken) {
-                res.send('new Token '+ name + ' saved');
-            },
-            error: function (e) {
-                console.log('error: ' + e.message);
-                res.status = 403;
-                // return res;
-            }
-        });
+        let newToken = await parse.saveToken(name, symbol);
+        res.send('new token ' + name + ' saved');
     });
 
     /**
@@ -336,7 +322,7 @@ var appRouter = function (app) {
                     years: function (val) { return val * this.days(365) }
                 };
 
-                startTime = web3.eth.getBlock('latest').timestamp + duration.minutes(7);
+                startTime = web3.eth.getBlock('latest').timestamp + duration.minutes(8);
                 endTime = startTime + duration.weeks(1);
 
                 console.log(startTime);
@@ -404,7 +390,7 @@ var appRouter = function (app) {
                             //     }
                             //     console.log(res);
                             // });
-                            web3.eth.sendTransaction(transaction);
+                            // web3.eth.sendTransaction(transaction);
 
                         });
                         
