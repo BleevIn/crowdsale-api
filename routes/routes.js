@@ -168,6 +168,7 @@ var appRouter = function (app) {
         else{
             var shell = require('shelljs');
             shell.rm('-r', buildDir);
+            fs.mkdirSync(buildDir);
         }
 
         tokenQuery.equalTo("objectId", tokenId);
