@@ -10,12 +10,12 @@ exports.saveToken = function (name, symbol) {
     newToken.set('name', name);
     newToken.set('symbol', symbol);
     newToken.set('decimals', 18);
-    
+
     return newToken.save(null, {
         success: function (newToken) {
             // res.send('new Token '+ name + ' saved');
             return newToken;
-        },
+        }, 
         error: function (e) {
             console.log('error: ' + e.message);
             throw e;

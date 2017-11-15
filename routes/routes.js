@@ -1,19 +1,12 @@
-var Parse = require('parse/node');
-Parse.initialize('ICO-API-DEV');
-Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
-
-var parse = require('../utils/parse');
-
-Web3 = require('web3');
-// var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+const parse = require('../utils/parse');
+const crowdsale = require('../utils/crowdsale');
+const encodeAbi = require('ethereumjs-abi');
+const solc = require('solc');
+const Web3 = require('web3');
+const fs = require('fs');
 
 // Connect to local Ethereum node
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-
-const solc = require('solc');
-
-var fs = require('fs');
-const encodeAbi = require('ethereumjs-abi');
 
 
 var appRouter = function (app) {
@@ -23,7 +16,7 @@ var appRouter = function (app) {
     app.get("/", function (req, res) {
         res.send("Hello World");
     });
-   
+
     /**
     * Create a token
     */
@@ -45,17 +38,17 @@ var appRouter = function (app) {
         let Token = Parse.Object.extend('Token');
         var query = new Parse.Query(Token);
         query.find({
-          success: function(results) {
-            // results is an array of Parse.Object.
-            console.log(results);
-            res.send(results);
-          },
-        
-          error: function(e) {
-            // error is an instance of Parse.Error.
-            console.log('error: ' + e.message);
-            res.status = 403;
-          }
+            success: function (results) {
+                // results is an array of Parse.Object.
+                console.log(results);
+                res.send(results);
+            },
+
+            error: function (e) {
+                // error is an instance of Parse.Error.
+                console.log('error: ' + e.message);
+                res.status = 403;
+            }
         });
     });
 
@@ -67,42 +60,42 @@ var appRouter = function (app) {
         var tokenId = req.query.id;
         console.log(tokenId);
         let Token = Parse.Object.extend('Token');
-        
+
         var tokenQuery = new Parse.Query(Token);
-        
+
         var tokenRes = {};
 
         tokenQuery.equalTo('objectId', tokenId);
         tokenQuery.first({
-          success: function(token) {
-            // results is an array of Parse.Object.
-            console.log(token);
-           
-            tokenRes = token.toJSON();
+            success: function (token) {
+                // results is an array of Parse.Object.
+                console.log(token);
 
-            let CrowdSale = Parse.Object.extend('CrowdSale');
-            let crowdSaleQuery = new Parse.Query(CrowdSale);
-            crowdSaleQuery.equalTo('tokenId', tokenId);
-            crowdSaleQuery.first({
-                success: function(crowdSale){
-                    console.log(crowdSale);
-                    console.log(tokenRes);
-                    tokenRes.crowdSale = crowdSale.toJSON();
-                    res.send(tokenRes);
-                },
+                tokenRes = token.toJSON();
 
-                error: function(e) {
-                    console.log('error: ' + e.message);
-                    res.status = 403;
-                }
-            });
-          },
-        
-          error: function(e) {
-            // error is an instance of Parse.Error.
-            console.log('error: ' + e.message);
-            res.status = 403;
-          }
+                let CrowdSale = Parse.Object.extend('CrowdSale');
+                let crowdSaleQuery = new Parse.Query(CrowdSale);
+                crowdSaleQuery.equalTo('tokenId', tokenId);
+                crowdSaleQuery.first({
+                    success: function (crowdSale) {
+                        console.log(crowdSale);
+                        console.log(tokenRes);
+                        tokenRes.crowdSale = crowdSale.toJSON();
+                        res.send(tokenRes);
+                    },
+
+                    error: function (e) {
+                        console.log('error: ' + e.message);
+                        res.status = 403;
+                    }
+                });
+            },
+
+            error: function (e) {
+                // error is an instance of Parse.Error.
+                console.log('error: ' + e.message);
+                res.status = 403;
+            }
         });
     });
 
@@ -110,117 +103,122 @@ var appRouter = function (app) {
      * Create a crowdSale
      */
 
-    app.post("/crowdsale", function (req, res) {
-    
-        console.log(req.body);
-        // console.log(req.key);
-        let tokenId = req.body.tokenId;
-        let startString = req.body.startTime;
-        let endString = req.body.endTime;
-        let baseRate = req.body.baseRate;
-        let wallet = req.body.wallet;
-        // let key = req.body.key;
+    app.post("/crowdsale", async function (req, res) {
 
-        let CrowdSale = Parse.Object.extend('CrowdSale');
-        let newCrowdSale = new CrowdSale();
+        let result = await crowdsale.newCrowdsale(req.body);
+        res.send(result);
+        // console.log(req.body);
+        // // console.log(req.key);
+        // let tokenId = req.body.tokenId;
+        // let startString = req.body.startTime;
+        // let endString = req.body.endTime;
+        // let baseRate = req.body.baseRate;
+        // let wallet = req.body.wallet;
+        // // let key = req.body.key;
 
-        var startTemp = new Date(startString);
-        var startEpoch = startTemp.getTime()/1000; 
-        var endTemp = new Date(endString);
-        var endEpoch = endTemp.getTime()/1000;
+        // let CrowdSale = Parse.Object.extend('CrowdSale');
+        // let newCrowdSale = new CrowdSale();
 
-        console.log('start epoch:', startEpoch);
-        console.log('end epoch:', endEpoch);
+        // var startTemp = new Date(startString);
+        // var startEpoch = startTemp.getTime()/1000; 
+        // var endTemp = new Date(endString);
+        // var endEpoch = endTemp.getTime()/1000;
 
-        newCrowdSale.set('tokenId',tokenId);
-        newCrowdSale.set('startEpoch', startEpoch);
-        newCrowdSale.set('endEpoch', endEpoch);
-        newCrowdSale.set('baseRate', baseRate);
-        newCrowdSale.set('wallet', wallet);
-        
-        newCrowdSale.save(null, {
-            success: function (newCrowdSale) {
-                console.log(newCrowdSale);
-                res.send('new Crowd Sale saved');
-            },
-            error: function (e) {
-                console.log('error: ' + e.message);
-                res.status = 403;
-            }
-        });
+        // console.log('start epoch:', startEpoch);
+        // console.log('end epoch:', endEpoch);
+
+        // newCrowdSale.set('tokenId',tokenId);
+        // newCrowdSale.set('startEpoch', startEpoch);
+        // newCrowdSale.set('endEpoch', endEpoch);
+        // newCrowdSale.set('baseRate', baseRate);
+        // newCrowdSale.set('wallet', wallet);
+
+        // newCrowdSale.save(null, {
+        //     success: function (newCrowdSale) {
+        //         console.log(newCrowdSale);
+        //         res.send('new Crowd Sale saved');
+        //     },
+        //     error: function (e) {
+        //         console.log('error: ' + e.message);
+        //         res.status = 403;
+        //     }
+        // });
     });
 
-    app.post("/build", function (req, res) {
+    app.post("/build", async function (req, res) {
+
+        let result = await crowdsale.buildContracts(req.body.tokenId);
+        res.send(result);
         // TODO: remove build before
 
-        // replace token file with toke meta info
-        let tokenId = req.body.tokenId;
+        // // replace token file with toke meta info
+        // let tokenId = req.body.tokenId;
 
-        let Token = Parse.Object.extend('Token');  
-        let tokenQuery = new Parse.Query(Token);
-        
+        // let Token = Parse.Object.extend('Token');
+        // let tokenQuery = new Parse.Query(Token);
 
-        var buildDir = './build';
-        console.log(buildDir);
-        if (!fs.existsSync(buildDir)) {
-            fs.mkdirSync(buildDir);
-        }
-        else{
-            var shell = require('shelljs');
-            shell.rm('-r', buildDir);
-            fs.mkdirSync(buildDir);
-        }
 
-        tokenQuery.equalTo("objectId", tokenId);
-        tokenQuery.first({
-            success: function(Token){
-                let token = Token.toJSON();
-                console.log(token);
+        // var buildDir = './build';
+        // console.log(buildDir);
+        // if (!fs.existsSync(buildDir)) {
+        //     fs.mkdirSync(buildDir);
+        // }
+        // else {
+        //     var shell = require('shelljs');
+        //     shell.rm('-r', buildDir);
+        //     fs.mkdirSync(buildDir);
+        // }
 
-                let tokenTemplate = "templates/Token.template";
-                let tokenFile = "Token.sol";
+        // tokenQuery.equalTo("objectId", tokenId);
+        // tokenQuery.first({
+        //     success: function (Token) {
+        //         let token = Token.toJSON();
+        //         console.log(token);
 
-                let crowdSaleTemplate = "templates/CrowdSale.template";
-                let crowdSaleFile = "CrowdSale.sol";
+        //         let tokenTemplate = "templates/Token.template";
+        //         let tokenFile = "Token.sol";
 
-                fs.readFile(tokenTemplate, 'utf8', function (err,data) {
-                    if (err) {
-                      return console.log(err);
-                    }
-                    var nameResult = data.replace(/token_name_placeholder/g, token.name);
-                    var result = nameResult.replace(/token_symbol_placeholder/g, token.symbol);
-                    var contractDir = './build/contracts';
-                    console.log(contractDir);
-                    if (!fs.existsSync(contractDir)) {
-                        fs.mkdirSync(contractDir);
-                    }
+        //         let crowdSaleTemplate = "templates/CrowdSale.template";
+        //         let crowdSaleFile = "CrowdSale.sol";
 
-                    fs.writeFile(contractDir + '/' + tokenFile, result, 'utf8', function (err) {
-                       if (err) return console.log(err);
-                    });
-                });
+        //         fs.readFile(tokenTemplate, 'utf8', function (err, data) {
+        //             if (err) {
+        //                 return console.log(err);
+        //             }
+        //             var nameResult = data.replace(/token_name_placeholder/g, token.name);
+        //             var result = nameResult.replace(/token_symbol_placeholder/g, token.symbol);
+        //             var contractDir = './build/contracts';
+        //             console.log(contractDir);
+        //             if (!fs.existsSync(contractDir)) {
+        //                 fs.mkdirSync(contractDir);
+        //             }
 
-                fs.readFile(crowdSaleTemplate, 'utf8', function (err,data) {
-                    if (err) {
-                      return console.log(err);
-                    }
-                    var contractDir = './build/contracts';
-                    console.log(contractDir);
-                    if (!fs.existsSync(contractDir)) {
-                        fs.mkdirSync(contractDir);
-                    }
+        //             fs.writeFile(contractDir + '/' + tokenFile, result, 'utf8', function (err) {
+        //                 if (err) return console.log(err);
+        //             });
+        //         });
 
-                    fs.writeFile(contractDir + '/' + crowdSaleFile, data, 'utf8', function (err) {
-                       if (err) return console.log(err);
-                    });
-                });
-                res.send('template replaced.');
-            },
-            error: function (e) {
-                console.log('error: ' + e.message);
-                res.status = 403;
-            }
-        });
+        //         fs.readFile(crowdSaleTemplate, 'utf8', function (err, data) {
+        //             if (err) {
+        //                 return console.log(err);
+        //             }
+        //             var contractDir = './build/contracts';
+        //             console.log(contractDir);
+        //             if (!fs.existsSync(contractDir)) {
+        //                 fs.mkdirSync(contractDir);
+        //             }
+
+        //             fs.writeFile(contractDir + '/' + crowdSaleFile, data, 'utf8', function (err) {
+        //                 if (err) return console.log(err);
+        //             });
+        //         });
+        //         res.send('template replaced.');
+        //     },
+        //     error: function (e) {
+        //         console.log('error: ' + e.message);
+        //         res.status = 403;
+        //     }
+        // });
     });
 
     app.post("/merge", function (req, res) {
@@ -229,7 +227,7 @@ var appRouter = function (app) {
         var crowdSaleFile = __dirname + '/../build/contracts/CrowdSale.sol';
         var oraclesComineDir = __dirname + '/../node_modules/oracles-combine-solidity';
         var outDir = oraclesComineDir + '/out';
-        var mergedDir =  buildDir +'/merged';
+        var mergedDir = buildDir + '/merged';
 
         console.log(crowdSaleFile);
         var shell = require('shelljs');
@@ -270,7 +268,7 @@ var appRouter = function (app) {
                 //         res.send('Merged stopped.')
                 //     }
                 // });
-                
+
             }
             else {
                 shell.mv('./out', mergedDir);
@@ -278,33 +276,33 @@ var appRouter = function (app) {
                 res.send('Successuly merged!')
             }
         }
-        
+
     });
 
-    app.post("/deploy", function(req, res) {
+    app.post("/deploy", function (req, res) {
         // Compile the source code
 
         let tokenId = req.body.tokenId;
-        
+
         console.log('tokenId', tokenId);
 
         // Deploy contract instance
-        let CrowdSale = Parse.Object.extend('CrowdSale');  
+        let CrowdSale = Parse.Object.extend('CrowdSale');
         let crowdSaleQuery = new Parse.Query(CrowdSale);
-        crowdSaleQuery.equalTo('tokenId',tokenId);
+        crowdSaleQuery.equalTo('tokenId', tokenId);
 
         crowdSaleQuery.first({
 
-            success: function(crowdSale) {
+            success: function (crowdSale) {
                 console.log(crowdSale.toJSON());
 
                 // compile contract
                 let crowdSaleParams = crowdSale.toJSON();
 
                 var buildDir = __dirname + '/../build';
-                var mergedDir =  buildDir +'/merged';
-                var mergedFile =  mergedDir +'/CrowdSale.sol';
-        
+                var mergedDir = buildDir + '/merged';
+                var mergedFile = mergedDir + '/CrowdSale.sol';
+
                 const input = fs.readFileSync(mergedFile);
                 const output = solc.compile(input.toString(), 1);
                 const bytecode = output.contracts[':TokenCrowdsale'].bytecode;
@@ -329,9 +327,9 @@ var appRouter = function (app) {
 
                 console.log(startTime);
                 console.log(endTime);
-            
 
-                    const contractInstance = contract.new(
+
+                const contractInstance = contract.new(
                     // crowdSaleParams.startTime,
                     // crowdSaleParams.endTime,
                     startTime,
@@ -341,44 +339,44 @@ var appRouter = function (app) {
                     // crowdSaleParams.wallet,
                     web3.eth.accounts[0],
                     {
-                    data: '0x' + bytecode,
-                    from: web3.eth.coinbase,
-                    gas: 4000000
-                }, (err, crowdRes) => {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    }
+                        data: '0x' + bytecode,
+                        from: web3.eth.coinbase,
+                        gas: 4000000
+                    }, (err, crowdRes) => {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        }
 
-                    // Log the tx, you can explore status with eth.getTransaction()
-                    console.log(crowdRes.transactionHash);
-                    // console.log('res:', res);
+                        // Log the tx, you can explore status with eth.getTransaction()
+                        console.log(crowdRes.transactionHash);
+                        // console.log('res:', res);
 
-                    // If we have an address property, the contract was deployed
-                    if (crowdRes.address) {
-                        console.log('Contract address: ' + crowdRes.address);
-                        // Let's test the deployed contract
-                        // Reference to the deployed contract
-                        var address = crowdRes.address
-                        const crowdsaleInstance = contract.at(address);
-                        crowdsaleInstance.token.call({gas: 3000000},(err, tokenRes) =>{
-                            if (err) {
-                                console.log(err);
-                                return;
-                            }
-                            console.log('Token deployed');
-                            console.log(tokenRes);   
+                        // If we have an address property, the contract was deployed
+                        if (crowdRes.address) {
+                            console.log('Contract address: ' + crowdRes.address);
+                            // Let's test the deployed contract
+                            // Reference to the deployed contract
+                            var address = crowdRes.address
+                            const crowdsaleInstance = contract.at(address);
+                            crowdsaleInstance.token.call({ gas: 3000000 }, (err, tokenRes) => {
+                                if (err) {
+                                    console.log(err);
+                                    return;
+                                }
+                                console.log('Token deployed');
+                                console.log(tokenRes);
 
-                            var tokenAddress = {};
-                            tokenAddress.CrowdSaleContractAddress = crowdRes.address; 
-                            tokenAddress.TokenContractAddress = tokenRes;
-                            res.send(tokenAddress);
-                        });
-                    }
-                });
+                                var tokenAddress = {};
+                                tokenAddress.CrowdSaleContractAddress = crowdRes.address;
+                                tokenAddress.TokenContractAddress = tokenRes;
+                                res.send(tokenAddress);
+                            });
+                        }
+                    });
             },
 
-            error: function(e){
+            error: function (e) {
                 console.log('error: ' + e.message);
                 res.status = 403;
             }
