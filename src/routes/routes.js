@@ -1,3 +1,7 @@
+// import { request } from 'https';
+// const 
+const request = require('request');
+
 var Parse = require('parse/node');
 Parse.initialize('ICO-API-DEV');
 Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
@@ -6,9 +10,11 @@ Web3 = require('web3');
 // var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
 
 // Connect to local Ethereum node
-const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
 
 const solc = require('solc');
+const crowdsale = require('../lib/crowdsale');
 
 var fs = require('fs')
 
@@ -162,71 +168,12 @@ var appRouter = function (app) {
         });
     });
 
-    app.post("/build", function (req, res) {
+    app.post("/build", async function (req, res) {
         // TODO: remove build before
 
         // replace token file with toke meta info
-        let tokenId = req.body.tokenId;
-
-        let Token = Parse.Object.extend('Token');  
-        let tokenQuery = new Parse.Query(Token);
-
-        tokenQuery.equalTo("objectId", tokenId);
-        tokenQuery.first({
-            success: function(Token){
-                let token = Token.toJSON();
-                console.log(token);
-
-                let tokenTemplate = "templates/Token.template";
-                let tokenFile = "Token.sol";
-
-                let crowdSaleTemplate = "templates/CrowdSale.template";
-                let crowdSaleFile = "CrowdSale.sol";
-
-                var buildDir = './build';
-                console.log(buildDir);
-                if (!fs.existsSync(buildDir)) {
-                    fs.mkdirSync(buildDir);
-                }
-                
-                fs.readFile(tokenTemplate, 'utf8', function (err,data) {
-                    if (err) {
-                      return console.log(err);
-                    }
-                    var nameResult = data.replace(/token_name_placeholder/g, token.name);
-                    var result = nameResult.replace(/token_symbol_placeholder/g, token.symbol);
-                    var contractDir = './build/contracts';
-                    console.log(contractDir);
-                    if (!fs.existsSync(contractDir)) {
-                        fs.mkdirSync(contractDir);
-                    }
-
-                    fs.writeFile(contractDir + '/' + tokenFile, result, 'utf8', function (err) {
-                       if (err) return console.log(err);
-                    });
-                });
-
-                fs.readFile(crowdSaleTemplate, 'utf8', function (err,data) {
-                    if (err) {
-                      return console.log(err);
-                    }
-                    var contractDir = './build/contracts';
-                    console.log(contractDir);
-                    if (!fs.existsSync(contractDir)) {
-                        fs.mkdirSync(contractDir);
-                    }
-
-                    fs.writeFile(contractDir + '/' + crowdSaleFile, data, 'utf8', function (err) {
-                       if (err) return console.log(err);
-                    });
-                });
-                res.send('template replaced.');
-            },
-            error: function (e) {
-                console.log('error: ' + e.message);
-                res.status = 403;
-            }
-        });
+        let result = await crowdsale.build(req.body.tokenId);
+        res.send(result);
     });
 
     app.post("/merge", function (req, res) {
@@ -404,7 +351,7 @@ var appRouter = function (app) {
                             //     }
                             //     console.log(res);
                             // });
-                            web3.eth.sendTransaction(transaction);
+                            // web3.eth.sendTransaction(transaction);
 
                         });
                         
