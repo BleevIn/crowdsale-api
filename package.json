@@ -16,7 +16,7 @@
     "ethereumjs-abi": "^0.6.4",
     "express": "^4.15.4",
     "fs-extra": "^4.0.2",
-    "oracles-combine-solidity": "git://github.com/oraclesorg/oracles-combine-solidity",
+    "oracles-combine-solidity": "git://github.com/oraclesorg/oracles-combine-solidity#refactor",
     "parse": "^1.10.0",
     "prompt": "^1.0.0",
     "shelljs": "^0.7.8",
