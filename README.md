@@ -1,5 +1,7 @@
 # crowdsale-api
 
+This is a service for generating and deploying ICO smart contract.
+
 1. install dependencies
 
 ```
