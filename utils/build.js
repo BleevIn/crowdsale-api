@@ -193,7 +193,9 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
                     var tokenAddress = {};
                     tokenAddress.CrowdSaleContractAddress = crowdRes.address;
                     tokenAddress.TokenContractAddress = tokenRes;
-                    res.send(tokenAddress);
+                   // res.send(tokenAddress);
+                   console.log('contract address is:', tokenAddress);
+                   return tokenAddress;
                 });
             }
         });
