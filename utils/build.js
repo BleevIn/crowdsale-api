@@ -127,6 +127,7 @@ getTimeDuration = function(){
 exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
     // Compile the source code
     console.log('tokenId', tokenId);
+    console.log('crowdSale metadata is: ', crowdsale);
 
     let contractFilePath = path.join(getMergeDirPath(tokenId), '/', CROWDSALE_FILE_NAME); 
     let output = compileContract(contractFilePath);
@@ -156,7 +157,7 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
         // crowdSaleParams.endTime,
         startTime,
         endTime,
-        crowdSaleParams.baseRate,
+        crowdsale.baseRate,
         // 100,
         // crowdSaleParams.wallet,
         web3.eth.accounts[0],
