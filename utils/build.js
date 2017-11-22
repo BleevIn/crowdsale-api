@@ -152,52 +152,39 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
 
     console.log(startTime);
     console.log(endTime);
-    const contractInstance = contract.new(
-        // crowdSaleParams.startTime,
-        // crowdSaleParams.endTime,
+    const contractInstance = await contract.new(
+        // crowdsale.startTime,
+        // crowdsale.endTime,
         startTime,
         endTime,
         crowdsale.baseRate,
-        // 100,
-        // crowdSaleParams.wallet,
+        // crowdsale.wallet,
         web3.eth.accounts[0],
         {
             data: '0x' + bytecode,
             from: web3.eth.coinbase,
             gas: 4000000
-        }, (err, crowdRes) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-
-            // Log the tx, you can explore status with eth.getTransaction()
-            console.log(crowdRes.transactionHash);
-            // console.log('res:', res);
-
-            // If we have an address property, the contract was deployed
-            if (crowdRes.address) {
-                console.log('Contract address: ' + crowdRes.address);
-                // Let's test the deployed contract
-                // Reference to the deployed contract
-                var address = crowdRes.address
-                const crowdsaleInstance = contract.at(address);
-                crowdsaleInstance.token.call({ gas: 3000000 }, (err, tokenRes) => {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    }
-                    console.log('Token deployed');
-                    console.log(tokenRes);
-
-                    var tokenAddress = {};
-                    tokenAddress.CrowdSaleContractAddress = crowdRes.address;
-                    tokenAddress.TokenContractAddress = tokenRes;
-                   // res.send(tokenAddress);
-                   console.log('contract address is:', tokenAddress);
-                   return tokenAddress;
-                });
-            }
         });
+    console.log();
+    // Log the tx, you can explore status with eth.getTransaction()
+    console.log(crowdRes.transactionHash);
 
+    // If we have an address property, the contract was deployed
+    var tokenAddress = {};
+    tokenAddress.CrowdSaleContractAddress = crowdRes.address;
+    if (crowdRes.address) {
+        console.log('Contract address: ' + crowdRes.address);
+        // Let's test the deployed contract
+        // Reference to the deployed contract
+        var address = crowdRes.address
+        const crowdsaleInstance = contract.at(address);
+        let token = await crowdsaleInstance.token.call({ gas: 3000000 });
+        console.log('Token deployed');
+        console.log(tokenRes);
+        tokenAddress.TokenContractAddress = tokenRes;
+        // res.send(tokenAddress);
+        console.log('contract address is:', tokenAddress);
+        
+    }
+    return tokenAddress;
 }
