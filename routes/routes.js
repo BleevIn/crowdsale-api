@@ -69,7 +69,8 @@ var appRouter = function (app) {
         await buildUtil.mergeCrowdsaleContract(tokenId);
         let contractAddress = await buildUtil.deployCrowdsaleContract(tokenId, crowdsaleJSON);
 
-        res.send('deployed address:', contractAddress);
+        console.log('deployed address:', contractAddress);
+        res.send(contractAddress);
     });
 }
 module.exports = appRouter;

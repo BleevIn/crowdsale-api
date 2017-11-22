@@ -165,7 +165,6 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
             from: web3.eth.coinbase,
             gas: 4000000
         });
-    console.log();
     // Log the tx, you can explore status with eth.getTransaction()
     console.log(crowdRes.transactionHash);
 
