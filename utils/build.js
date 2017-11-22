@@ -152,7 +152,7 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
 
     console.log(startTime);
     console.log(endTime);
-    const contractInstance = await contract.new(
+    const crowdRes = await contract.new(
         // crowdsale.startTime,
         // crowdsale.endTime,
         startTime,
@@ -178,7 +178,7 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
         // Reference to the deployed contract
         var address = crowdRes.address
         const crowdsaleInstance = contract.at(address);
-        let token = await crowdsaleInstance.token.call({ gas: 3000000 });
+        let tokenRes = await crowdsaleInstance.token.call({ gas: 3000000 });
         console.log('Token deployed');
         console.log(tokenRes);
         tokenAddress.TokenContractAddress = tokenRes;
