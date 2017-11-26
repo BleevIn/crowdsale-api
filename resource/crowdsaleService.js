@@ -9,6 +9,7 @@ Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
 const CrowdSale = Parse.Object.extend('CrowdSale');
 
 exports.newCrowdsale = async function (options) {
+
     let args = options || {};
 
     let tokenId = args.tokenId;
