@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
-
 const Parse = require('parse/node');
 Parse.initialize('ICO-API-DEV');
 Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
