@@ -1,3 +1,4 @@
+const log = require('../utils/logger.js')
 var Parse = require('parse/node');
 Parse.initialize('ICO-API-DEV');
 Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
@@ -21,7 +22,7 @@ var GetTokens = async function () {
 }
 
 var GetTokenByTokenId = async function (tokenId) {
-    console.log(tokenId);
+    log.info(tokenId);
     var tokenQuery = new Parse.Query(Token);
     tokenQuery.equalTo('objectId', tokenId);
     return  await tokenQuery.first();

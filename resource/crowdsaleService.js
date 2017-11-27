@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Parse = require('parse/node');
+const log = require('../utils/logger.js')
 Parse.initialize('ICO-API-DEV');
 Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
 
@@ -23,8 +24,8 @@ exports.newCrowdsale = async function (options) {
     var endTemp = new Date(endString);
     var endEpoch = endTemp.getTime() / 1000;
 
-    console.log('start epoch:', startEpoch);
-    console.log('end epoch:', endEpoch);
+    log.info('start epoch:', startEpoch);
+    log.info('end epoch:', endEpoch);
 
     newCrowdSale.set('tokenId', tokenId);
     newCrowdSale.set('startEpoch', startEpoch);

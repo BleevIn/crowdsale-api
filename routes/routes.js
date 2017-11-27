@@ -1,5 +1,6 @@
 const tokenService = require('../resource/tokenService')();
 const crowdsaleService = require('../resource/crowdsaleService');
+const log = require('../utils/logger.js')
 
 const buildUtil = require('../utils/build');
 
@@ -15,7 +16,7 @@ var appRouter = function (app) {
     * Create a token
     */
     app.post("/token", async function (req, res) {
-        console.log(req.body);
+        log.info(req.body);
 
         let name = req.body.name;
         let symbol = req.body.symbol;
@@ -69,7 +70,7 @@ var appRouter = function (app) {
         await buildUtil.mergeCrowdsaleContract(tokenId);
         let contractAddress = await buildUtil.deployCrowdsaleContract(tokenId, crowdsaleJSON);
 
-        console.log('deployed address:', contractAddress);
+        log.info('deployed address:', contractAddress);
         res.send(contractAddress);
     });
 }
