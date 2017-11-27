@@ -5,7 +5,7 @@ Parse.serverURL = 'https://facetcoin-api-dev.herokuapp.com/parse';
 const crowdsaleService = require('../resource/crowdsaleService');
 const Token = Parse.Object.extend('Token');
 
-exports.saveToken = async function (name, symbol) {
+var SaveToken = async function (name, symbol) {
     let newToken = new Token();
 
     newToken.set('name', name);
@@ -15,20 +15,21 @@ exports.saveToken = async function (name, symbol) {
     return await newToken.save(null);
 }
 
-exports.getTokens = async function () {
+var GetTokens = async function () {
     let tokenQuery = new Parse.Query(Token);
     return await tokenQuery.find();
 }
 
-exports.getTokenByTokenId = async function (tokenId) {
+var GetTokenByTokenId = async function (tokenId) {
+    console.log(tokenId);
     var tokenQuery = new Parse.Query(Token);
     tokenQuery.equalTo('objectId', tokenId);
     return  await tokenQuery.first();
 }
 
-exports.getTokenDetail = async function (tokenId) {
+var GetTokenDetail = async function (tokenId) {
 
-    let token = await getTokenByTokenId(tokenId);
+    let token = await GetTokenByTokenId(tokenId);
     let crowdSale = await crowdsaleService.getCrowdsaleByTokenId(tokenId);
 
     var tokenRes = {};
@@ -38,3 +39,14 @@ exports.getTokenDetail = async function (tokenId) {
     return tokenRes;
 }
 
+module.exports = exports = function () {
+
+    var _this = exports;
+
+    _this.saveToken = SaveToken;
+    _this.getTokens = GetTokens;
+    _this.getTokenByTokenId = GetTokenByTokenId;
+    _this.getTokenDetail = GetTokenDetail;
+
+    return _this;
+};
