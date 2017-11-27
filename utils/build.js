@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs-extra');
+const log = require('../utils/logger.js')
 
 const BUILD_DIR_NAME = '.build';
 const CONTRACT_DIR_NAME = 'contracts';
@@ -26,7 +27,7 @@ exports.makeBuildDir = async function(tokenId) {
 exports.prepContractDir = async function(tokenId) {
     let CONTRACT_DIR_PATH = path.join(BUILD_DIR_NAME, '/', tokenId, '/', CONTRACT_DIR_NAME);
     let ifExist = await fs.pathExists(CONTRACT_DIR_PATH);
-    console.log('contract dir', ifExist);
+    log.info('contract dir', ifExist);
 
     if(ifExist) {
         await fs.emptyDir(CONTRACT_DIR_PATH);
@@ -39,7 +40,7 @@ exports.prepContractDir = async function(tokenId) {
 exports.prepMergeDir = async function(tokenId) {
     let MERGE_DIR_PATH = path.join(BUILD_DIR_NAME, '/', tokenId, '/', MERGE_DIR_NAME);
     let ifExist = await fs.pathExists(MERGE_DIR_PATH);
-    console.log('merge dir', ifExist);
+    log.info('merge dir', ifExist);
 
     if(ifExist) {
         await fs.emptyDir(MERGE_DIR_PATH);
@@ -58,27 +59,27 @@ exports.buildTokenContract = async function (tokenId, name, symbol) {
    var newTokenContract = nameResult.replace(/token_symbol_placeholder/g, symbol);
 
    let TOKEN_FILE_PATH = path.join(BUILD_DIR_NAME, '/', tokenId, '/', CONTRACT_DIR_NAME,'/', TOKEN_FILE_NAME);
-   console.log('Token file output_path: ' + TOKEN_FILE_PATH);
+   log.info('Token file output_path: ' + TOKEN_FILE_PATH);
    let success =  await fs.writeFile(TOKEN_FILE_PATH, newTokenContract, 'utf8')
-   console.log('write token file:', success);
+   log.info('write token file:', success);
 }
 
 exports.buildCrowdsaleContract = async function (tokenId) {
 
-    console.log('Building crowdsale contracts');
+    log.info('Building crowdsale contracts');
     let CROWDSALE_TEMPLATE_PATH = path.join(TEMPLATE_DIR_NAME, '/', CROWDSALE_TEMPLATE_NAME)
     let crowdsaleFileContent = await fs.readFile(CROWDSALE_TEMPLATE_PATH, 'utf8');
 
     let CROWDSALE_FILE_PATH = path.join(BUILD_DIR_NAME, '/', tokenId, '/', CONTRACT_DIR_NAME,'/', CROWDSALE_FILE_NAME);
-    console.log('Crowdsale file output_path: ', CROWDSALE_FILE_PATH);
+    log.info('Crowdsale file output_path: ', CROWDSALE_FILE_PATH);
     let success = await fs.writeFile(CROWDSALE_FILE_PATH, crowdsaleFileContent, 'utf8');
-    console.log('write crowdsale file:', success);
+    log.info('write crowdsale file:', success);
 
 };
 
 exports.mergeCrowdsaleContract = async function (tokenId) {
 
-    console.log('Merging crowdsale contracts');
+    log.info('Merging crowdsale contracts');
 
     let PWD = __dirname;
 
@@ -92,7 +93,7 @@ exports.mergeCrowdsaleContract = async function (tokenId) {
     shell.cd(ORACLES_COMBINE_DIR_PATH);
 
     let CROWDSALE_FILE_PATH = path.join(BUILD_DIR_PATH, '/', tokenId, '/', CONTRACT_DIR_NAME,'/', CROWDSALE_FILE_NAME);
-    console.log(CROWDSALE_FILE_PATH);
+    log.info(CROWDSALE_FILE_PATH);
     if (shell.exec('npm start ' + CROWDSALE_FILE_PATH).code !== 0) {
         shell.echo('Error: merge file failed');
         shell.exit(1);
@@ -126,8 +127,8 @@ getTimeDuration = function(){
 
 exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
     // Compile the source code
-    console.log('tokenId', tokenId);
-    console.log('crowdSale metadata is: ', crowdsale);
+    log.info('tokenId', tokenId);
+    log.info('crowdSale metadata is: ', crowdsale);
 
     let contractFilePath = path.join(getMergeDirPath(tokenId), '/', CROWDSALE_FILE_NAME); 
     let output = compileContract(contractFilePath);
@@ -150,8 +151,8 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
     startTime = web3.eth.getBlock('latest').timestamp + duration.minutes(9);
     endTime = startTime + duration.weeks(1);
 
-    console.log(startTime);
-    console.log(endTime);
+    log.info(startTime);
+    log.info(endTime);
     const crowdRes = await contract.new(
         // crowdsale.startTime,
         // crowdsale.endTime,
@@ -166,23 +167,23 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
             gas: 4000000
         });
     // Log the tx, you can explore status with eth.getTransaction()
-    console.log(crowdRes.transactionHash);
+    log.info(crowdRes.transactionHash);
 
     // If we have an address property, the contract was deployed
     var tokenAddress = {};
     tokenAddress.CrowdSaleContractAddress = crowdRes.address;
     if (crowdRes.address) {
-        console.log('Contract address: ' + crowdRes.address);
+        log.info('Contract address: ' + crowdRes.address);
         // Let's test the deployed contract
         // Reference to the deployed contract
         var address = crowdRes.address
         const crowdsaleInstance = contract.at(address);
         let tokenRes = await crowdsaleInstance.token.call({ gas: 3000000 });
-        console.log('Token deployed');
-        console.log(tokenRes);
+        log.info('Token deployed');
+        log.info(tokenRes);
         tokenAddress.TokenContractAddress = tokenRes;
         // res.send(tokenAddress);
-        console.log('contract address is:', tokenAddress);
+        log.info('contract address is:', tokenAddress);
         
     }
     return tokenAddress;
