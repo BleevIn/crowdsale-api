@@ -1,4 +1,4 @@
-const tokenService = require('../resource/tokenService');
+const tokenService = require('../resource/tokenService')();
 const crowdsaleService = require('../resource/crowdsaleService');
 
 const buildUtil = require('../utils/build');
