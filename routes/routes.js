@@ -52,25 +52,29 @@ var appRouter = function (app) {
 
 
     app.post("/deploy", async function (req, res) {
-        let tokenId = req.body.tokenId; 
-        await buildUtil.makeBuildDir(tokenId);
-        await buildUtil.prepContractDir(tokenId);
-        await buildUtil.buildCrowdsaleContract(tokenId);
+        let tokenId = req.body.tokenId;
+        try {
+            await buildUtil.makeBuildDir(tokenId);
+            await buildUtil.prepContractDir(tokenId);
+            await buildUtil.buildCrowdsaleContract(tokenId);
 
-        let tokenObject = await tokenService.getTokenByTokenId(tokenId);
-        let tokenJSON = tokenObject.toJSON();
+            let tokenObject = await tokenService.getTokenByTokenId(tokenId);
+            let tokenJSON = tokenObject.toJSON();
 
-        let crowdsaleObject = await crowdsaleService.getCrowdsaleByTokenId(tokenId);
-        let crowdsaleJSON = crowdsaleObject.toJSON();
+            let crowdsaleObject = await crowdsaleService.getCrowdsaleByTokenId(tokenId);
+            let crowdsaleJSON = crowdsaleObject.toJSON();
 
-        await buildUtil.buildTokenContract(tokenId, tokenJSON.name, tokenJSON.symbol);
+            await buildUtil.buildTokenContract(tokenId, tokenJSON.name, tokenJSON.symbol);
 
-        await buildUtil.prepMergeDir(tokenId);
-        await buildUtil.mergeCrowdsaleContract(tokenId);
-        let contractAddress = await buildUtil.deployCrowdsaleContract(tokenId, crowdsaleJSON);
+            await buildUtil.prepMergeDir(tokenId);
+            await buildUtil.mergeCrowdsaleContract(tokenId);
+            let contractAddress = await buildUtil.deployCrowdsaleContract(tokenId, crowdsaleJSON);
 
-        console.log('deployed address:', contractAddress);
-        res.send(contractAddress);
+            console.log('deployed address:', contractAddress);
+            res.send(contractAddress);
+        } catch (e) {
+            res.status(500).send('deployment failed');
+        }
     });
 }
 module.exports = appRouter;
