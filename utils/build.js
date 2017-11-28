@@ -89,15 +89,18 @@ exports.mergeCrowdsaleContract = async function (tokenId) {
     const MERGE_DIR_PATH = path.join(PWD, '/../.build/', tokenId, '/', MERGE_DIR_NAME);
 
     const shell = require('shelljs');
-    shell.cd(ORACLES_COMBINE_DIR_PATH);
 
     let CROWDSALE_FILE_PATH = path.join(BUILD_DIR_PATH, '/', tokenId, '/', CONTRACT_DIR_NAME,'/', CROWDSALE_FILE_NAME);
     console.log(CROWDSALE_FILE_PATH);
-    if (shell.exec('npm start ' + CROWDSALE_FILE_PATH).code !== 0) {
-        shell.echo('Error: merge file failed');
-        shell.exit(1);
+    if (shell.exec('npm start --prefix '+ ORACLES_COMBINE_DIR_PATH + ' ' + CROWDSALE_FILE_PATH).code !== 0) {
+        console.log('oracle compbine npm install failed');
+        throw new Error('Error: merge file failed');
     } else {
-        shell.mv(ORACLES_COMBINE_OUT_DIR_PATH + '/CrowdSale_flat.sol',  path.join(MERGE_DIR_PATH, '/', CROWDSALE_FILE_NAME));
+        let mvRes = shell.mv(ORACLES_COMBINE_OUT_DIR_PATH + '/CrowdSale_flat.sol',  path.join(MERGE_DIR_PATH, '/', CROWDSALE_FILE_NAME));
+        if (mvRes.code !== 0) {
+            console.log('failed to move flat sol file');
+            throw new Error('Error: merge file failed');
+        }
     }
 
 };
