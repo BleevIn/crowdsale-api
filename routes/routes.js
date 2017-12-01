@@ -1,8 +1,7 @@
 const tokenService = require('../resource/tokenService')();
 const crowdsaleService = require('../resource/crowdsaleService');
 const log = require('../utils/logger.js')
-
-const buildUtil = require('../utils/build');
+const deployJobService = require('../resource/deployJobService');
 
 var appRouter = function (app) {
     /**
@@ -55,24 +54,12 @@ var appRouter = function (app) {
     app.post("/deploy", async function (req, res) {
         let tokenId = req.body.tokenId;
         try {
-            await buildUtil.makeBuildDir(tokenId);
-            await buildUtil.prepContractDir(tokenId);
-            await buildUtil.buildCrowdsaleContract(tokenId);
-
-            let tokenObject = await tokenService.getTokenByTokenId(tokenId);
-            let tokenJSON = tokenObject.toJSON();
-
-            let crowdsaleObject = await crowdsaleService.getCrowdsaleByTokenId(tokenId);
-            let crowdsaleJSON = crowdsaleObject.toJSON();
-
-            await buildUtil.buildTokenContract(tokenId, tokenJSON.name, tokenJSON.symbol);
-
-            await buildUtil.prepMergeDir(tokenId);
-            await buildUtil.mergeCrowdsaleContract(tokenId);
-            let contractAddress = await buildUtil.deployCrowdsaleContract(tokenId, crowdsaleJSON);
-
-            log.info('deployed address:', contractAddress);
-            res.send(contractAddress);
+            if (!tokenId) {
+                res.status(422).send('missing tokenId');
+                return;
+            }
+            let result = await deployJobService.registerJob(req.body);
+            res.status(200).send({deploymentId: result.objectId, status: result.status});
         } catch (e) {
             res.status(500).send('deployment failed. ' + e.message);
         }

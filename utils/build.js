@@ -145,9 +145,9 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
     // Connect to local Ethereum node
     const Web3 = require('web3');
     const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    const contract = web3.eth.contract(abi);
 
     // Contract object
-    const contract = web3.eth.contract(abi);
     const tokenContract = web3.eth.contract(tokenAbi);
 
     const duration =  getTimeDuration();
@@ -157,19 +157,7 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
 
     log.info(startTime);
     log.info(endTime);
-    const crowdRes = await contract.new(
-        // crowdsale.startTime,
-        // crowdsale.endTime,
-        startTime,
-        endTime,
-        crowdsale.baseRate,
-        // crowdsale.wallet,
-        web3.eth.accounts[0],
-        {
-            data: '0x' + bytecode,
-            from: web3.eth.coinbase,
-            gas: 4000000
-        });
+    const crowdRes = await newContract(contract, startTime, endTime, crowdsale, web3, bytecode);
     // Log the tx, you can explore status with eth.getTransaction()
     log.info(crowdRes.transactionHash);
 
@@ -190,5 +178,42 @@ exports.deployCrowdsaleContract = async function (tokenId, crowdsale) {
         log.info('contract address is:', tokenAddress);
         
     }
-    return tokenAddress;
+    crowdRes.tokenAddress = tokenAddress;
+    return crowdRes;
+}
+
+function newContract(contract, startTime, endTime, crowdsale, web3, bytecode) {
+
+    var validTry = 0;
+    return new Promise((resolve, reject) => {
+        contract.new(
+            // crowdsale.startTime,
+            // crowdsale.endTime,
+            startTime,
+            endTime,
+            crowdsale.baseRate,
+            // crowdsale.wallet,
+            web3.eth.accounts[0],
+            {
+                data: '0x' + bytecode,
+                from: web3.eth.coinbase,
+                gas: 4000000
+            },(err, crowdRes) => {
+                validTry++;
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                } else {
+                    /**
+                     * unknown
+                     * somehow the callback will get fired twice by web3. only second time has crowdRes.address
+                     * temporary solution is to retry until got address OR retry time out
+                     */
+                    if (crowdRes.address || validTry >= 5) {
+                        resolve(crowdRes);
+                    }
+                }
+            }
+            );
+    })
 }

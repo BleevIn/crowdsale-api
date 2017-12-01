@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "startDeploy": "node deployment.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "cd node_modules/oracles-combine-solidity && npm install"
   },
@@ -16,11 +17,13 @@
     "ethereumjs-abi": "^0.6.4",
     "express": "^4.15.4",
     "fs-extra": "^4.0.2",
-    "oracles-combine-solidity": "git://github.com/oraclesorg/oracles-combine-solidity#refactor",
+    "oracles-combine-solidity": "git://github.com/oraclesorg/oracles-combine-solidity.git#refactor",
     "parse": "^1.10.0",
     "prompt": "^1.0.0",
+    "request": "^2.83.0",
     "shelljs": "^0.7.8",
     "solc": "^0.4.18",
+    "toobusy-js": "^0.5.1",
     "web3": "^0.20.2",
     "winston": "^2.4.0",
     "zeppelin-solidity": "git://github.com/OpenZeppelin/zeppelin-solidity.git#master"

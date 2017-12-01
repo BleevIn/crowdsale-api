@@ -19,3 +19,11 @@ npm run postinstall
 ```
 node app.js
 ```
+## async contract deployment
+./resource/deployJobService will spawn new child process which simply runs 
+```
+node deployment.js [deploy_id]
+```
+where [deploy_id] is obtained by calling POST /deploy. While the deployment on going, you can monitor status column of ContractDeployment table
+
+
